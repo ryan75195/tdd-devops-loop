@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 
 from ..core.interfaces import EventHandler, EventObserver
-from ..core.config import ExecutionContext
+from ..tdd_core.config import ExecutionContext
 
 
 class EventBus:

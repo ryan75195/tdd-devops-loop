@@ -1,0 +1,25 @@
+name: "systematic_debug_workflow"
+mode: "conditional"
+
+global_config:
+  max_iterations: 20
+  enable_logging: true
+
+steps:
+  - agent_type: "debug"
+    name: "initial_debug"
+    config:
+      error_description: "Application crashes when processing large files"  # Replace with your error description
+      test_command: "python -m pytest tests/"  # Replace with your test command (optional)
+    max_iterations: 15
+
+  - agent_type: "code_review" 
+    name: "post_debug_review"
+    config:
+      review_criteria:
+        - "bug fixes"
+        - "performance"
+        - "error handling"
+      fix_issues: true
+    condition: "state.get('debugging_successful', False)"
+    max_iterations: 5

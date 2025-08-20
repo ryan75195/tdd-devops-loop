@@ -1,0 +1,24 @@
+name: "comprehensive_tdd_workflow"
+mode: "sequential"
+
+global_config:
+  max_iterations: 30
+  enable_logging: true
+
+steps:
+  - agent_type: "tdd"
+    name: "tdd_implementation" 
+    config:
+      project_path: "."  # Current directory (change to your project path)
+      ticket_number: "FEAT-001"  # Replace with your ticket number
+    max_iterations: 25
+
+  - agent_type: "code_review"
+    name: "post_tdd_review"
+    config:
+      fix_issues: true
+      review_criteria: 
+        - "code quality"
+        - "test coverage" 
+        - "best practices"
+    max_iterations: 10

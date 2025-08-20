@@ -1,0 +1,24 @@
+{
+  "name": "code_review_workflow", 
+  "mode": "sequential",
+  "global_config": {
+    "max_iterations": 15
+  },
+  "steps": [
+    {
+      "agent_type": "code_review",
+      "name": "review_codebase",
+      "config": {
+        "target_files": ["src/*.py", "lib/*.py"],
+        "fix_issues": true,
+        "review_criteria": [
+          "code quality",
+          "security",
+          "performance",
+          "maintainability"
+        ]
+      },
+      "max_iterations": 15
+    }
+  ]
+}
