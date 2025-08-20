@@ -10,7 +10,7 @@ from ..core.config import AgentConfig, TerminalCondition, TerminalConditionType
 # Import the TDD infrastructure
 from ..utils.logger import Logger
 from ..utils.usage_parser import UsageLimitParser
-from ..tdd_core.session_manager import ClaudeSessionManager
+from ..tdd_core.hybrid_session_manager import HybridSessionManager
 from ..tdd_core.config import Configuration, ExecutionContext
 
 
@@ -74,8 +74,8 @@ class TDDAgent(Agent):
         self.tdd_config = Configuration()
         self.tdd_config.max_iterations = self.config.max_iterations
         
-        # Initialize session manager
-        self.session_manager = ClaudeSessionManager(
+        # Initialize hybrid session manager (SDK with subprocess fallback)
+        self.session_manager = HybridSessionManager(
             self.tdd_config, 
             self.logger, 
             self.usage_parser

@@ -1,2 +1,7 @@
-# TDD DevOps Loop Requirements
-# No external dependencies required - uses only Python standard library
+# Agentic Pipeline Framework Requirements
+
+# Claude Code SDK for direct API integration
+claude-code-sdk>=0.0.19
+
+# Async support (included with claude-code-sdk)
+anyio>=4.0.0

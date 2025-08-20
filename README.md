@@ -314,7 +314,12 @@ python main.py run your_agent_type --your-params
 
 ## 📦 Dependencies
 
-This project uses only Python standard library components - no external dependencies required.
+This project requires:
+- Python 3.10+
+- Node.js (for Claude Code CLI)
+- Claude Code SDK (`pip install claude-code-sdk`)
+
+All other components use Python standard library.
 
 ## 🔄 Migration from Original TDD System
 
