@@ -312,12 +312,26 @@ python main.py list  # Should show your new agent
 python main.py run your_agent_type --your-params
 ```
 
-## 📦 Dependencies
+## 📦 Requirements
 
 This project requires:
-- Python 3.10+
-- Node.js (for Claude Code CLI)
-- Claude Code SDK (`pip install claude-code-sdk`)
+- **Python 3.10+**
+- **Node.js 18+** (for Claude Code CLI)
+- **Claude Code CLI**: `npm install -g @anthropic-ai/claude-code`
+- **Claude Code SDK**: `pip install claude-code-sdk`
+
+## Installation
+
+```bash
+# Install Node.js dependencies
+npm install -g @anthropic-ai/claude-code
+
+# Install Python dependencies  
+pip install claude-code-sdk
+
+# Verify installation
+claude --version
+```
 
 All other components use Python standard library.
 

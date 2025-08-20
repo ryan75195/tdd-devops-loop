@@ -1,6 +1,5 @@
-"""Claude SDK-based session management."""
+"""Claude Code SDK session management - pure SDK implementation."""
 
-import asyncio
 import json
 from typing import Tuple, Optional, Dict, Any
 
@@ -13,7 +12,7 @@ from ..parsers.json_parsers import JsonParsingChain
 
 
 class ClaudeSDKSessionManager:
-    """SDK-based session manager that replaces subprocess calls with direct SDK integration."""
+    """Pure Claude Code SDK session manager - no fallbacks, SDK only."""
     
     def __init__(self, config: Configuration, logger, usage_parser):
         self.config = config

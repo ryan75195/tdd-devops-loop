@@ -4,7 +4,7 @@ import os
 from typing import Optional, Dict, Any
 
 from .config import Configuration
-from .session_manager import ClaudeSessionManager
+from .sdk_session_manager import ClaudeSDKSessionManager
 from ..utils.logger import Logger
 from ..utils.usage_parser import UsageLimitParser
 
@@ -16,7 +16,7 @@ class TDDDevOpsLoop:
         self.config = config or Configuration()
         self.logger = Logger()
         self.usage_parser = UsageLimitParser()
-        self.session_manager = ClaudeSessionManager(self.config, self.logger, self.usage_parser)
+        self.session_manager = ClaudeSDKSessionManager(self.config, self.logger, self.usage_parser)
     
     def print_iteration_result(self, final_result: Optional[Dict[str, Any]]) -> bool:
         """Print the result of an iteration and return whether the ticket is complete."""
