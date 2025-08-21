@@ -97,8 +97,16 @@ Guidelines:
 - Focus on behavior and outcomes, not implementation details
 - Include both happy path and error/edge case scenarios
 - Ensure test scenarios cover all major requirements from the specification
+- MANDATORY: Always include integration test tasks that validate end-to-end workflows
+- MANDATORY: Include at least one test task for each user-facing component integration
+- MANDATORY: Include test tasks for screen/component integration points mentioned in the spec
 - Provide realistic effort estimates (PBI: 1-13 points, Tasks: 1-8 hours)
 - Make requirements specific enough to guide implementation without being prescriptive
+
+REQUIRED TEST CATEGORIES:
+1. Service/Core Logic Tests - Test individual methods and business logic
+2. Integration Tests - Test component integration and screen workflows  
+3. End-to-End Tests - Test complete user journeys from start to finish
 
 Respond ONLY with the JSON structure - no additional text, explanations, or markdown formatting."""
     
@@ -109,7 +117,16 @@ Respond ONLY with the JSON structure - no additional text, explanations, or mark
 SPECIFICATION DOCUMENT:
 {spec_content}
 
-Create a Product Backlog Item and associated test case tasks that comprehensively cover all requirements in this specification. Focus on creating thorough BDD test scenarios that validate the functionality described.
+Create a Product Backlog Item and associated test case tasks that comprehensively cover all requirements in this specification. 
+
+CRITICAL REQUIREMENTS:
+1. Create service/logic test tasks for core functionality
+2. MANDATORY: Create integration test tasks for any screens/components mentioned
+3. MANDATORY: Create end-to-end test tasks for complete user workflows
+4. Look for integration points like "LibraryScreen", "DocumentViewScreen", "trigger after loading", etc.
+5. Ensure each user-facing feature has corresponding integration tests
+
+Focus on creating thorough BDD test scenarios that validate both isolated functionality AND integration between components.
 
 Return valid JSON only - start your response with {{ and end with }}."""
     

@@ -253,14 +253,26 @@ Follow strict TDD methodology for this single iteration:
 5. **Refactor** if needed while keeping the test green (Refactor phase)
 6. **Commit your changes** using git with a descriptive commit message
 
-**CRITICAL RULES:**
+**CRITICAL RULES FOR REAL TESTING:**
 - Write only ONE failing test per iteration, not a full test suite
 - Choose the simplest/most fundamental test case first
+- **ALWAYS TEST REAL IMPLEMENTATION**: Import and test the actual service/component/class - NEVER mock the primary functionality you're implementing
+- Only mock external dependencies (APIs, databases, file system) - NOT the code you're testing
+- Tests must call the real methods on the real classes to verify actual behavior
+- If testing a service, import the service class and test its methods directly
+- If testing a component, render the real component and test its behavior
 - Implement only the minimal code needed to pass that specific test
 - If the task is complex, focus on one small piece at a time
 - ALWAYS commit your changes at the end with: `git add .` then `git commit -m "descriptive message"`
 
-Start by exploring the codebase, then write your single failing test, implement the code, and commit."""
+**TESTING EXAMPLES:**
+❌ WRONG: `const mockService = {{ getCachedDocumentById: jest.fn() }}`
+✅ CORRECT: `import {{ LibraryCacheService }} from './LibraryCacheService'; const service = new LibraryCacheService();`
+
+❌ WRONG: Re-implementing logic in test to make it pass
+✅ CORRECT: Testing the real implementation and letting failures guide development
+
+Start by exploring the codebase, then write your single failing test that tests REAL implementation, implement the code, and commit."""
         
         return prompt
     
