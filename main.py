@@ -20,6 +20,7 @@ from agentic_pipeline.composition.workflow import WorkflowBuilder, create_tdd_wo
 from agentic_pipeline.agents.tdd_agent import TDDAgent
 from agentic_pipeline.agents.code_review_agent import CodeReviewAgent
 from agentic_pipeline.agents.debug_agent import DebugAgent
+from agentic_pipeline.agents.planning_agent import PlanningAgent
 
 # Import utilities
 from agentic_pipeline.utils.logger import Logger
@@ -54,6 +55,15 @@ def register_builtin_agents():
         description="Performs iterative debugging with systematic error analysis",
         version="1.0.0",
         tags=["debug", "troubleshooting", "error-analysis"]
+    )
+    
+    # Register Planning Agent
+    registry.register_agent(
+        agent_type="planning",
+        agent_class=PlanningAgent,
+        description="Converts natural language specs to Azure DevOps work items with BDD test cases",
+        version="1.0.0",
+        tags=["planning", "bdd", "azure-devops", "project-management"]
     )
 
 
@@ -104,6 +114,20 @@ def cmd_run_agent(args):
         if args.target_files:
             config.set_parameter("target_files", args.target_files.split(","))
         config.set_parameter("fix_issues", args.fix_issues)
+    
+    elif args.agent_type == "planning":
+        if not args.spec_file or not args.project_name or not args.organization:
+            print("Error: Planning agent requires --spec-file, --project-name, and --organization")
+            sys.exit(1)
+        config.set_parameter("spec_file", args.spec_file)
+        config.set_parameter("project_name", args.project_name)
+        config.set_parameter("organization", args.organization)
+        if args.parent_id:
+            config.set_parameter("parent_id", args.parent_id)
+        if args.area_path:
+            config.set_parameter("area_path", args.area_path)
+        if args.iteration_path:
+            config.set_parameter("iteration_path", args.iteration_path)
     
     # Create and run agent
     try:
@@ -275,6 +299,13 @@ def main():
     run_parser.add_argument('--test-command', help='Test command (for Debug agent)')
     run_parser.add_argument('--target-files', help='Target files (for Code Review agent)')
     run_parser.add_argument('--fix-issues', action='store_true', help='Automatically fix issues')
+    # Planning agent arguments
+    run_parser.add_argument('--spec-file', help='Path to specification file (for Planning agent)')
+    run_parser.add_argument('--project-name', help='Azure DevOps project name (for Planning agent)')
+    run_parser.add_argument('--organization', help='Azure DevOps organization URL (for Planning agent)')
+    run_parser.add_argument('--parent-id', type=int, help='Parent work item ID to link to (for Planning agent)')
+    run_parser.add_argument('--area-path', help='Area path for work items (for Planning agent)')
+    run_parser.add_argument('--iteration-path', help='Iteration path for work items (for Planning agent)')
     
     # Run workflow command
     workflow_parser = subparsers.add_parser('workflow', help='Run a predefined workflow')

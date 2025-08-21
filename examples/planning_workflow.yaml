@@ -1,0 +1,25 @@
+name: "Planning Agent Workflow"
+description: "Convert specifications to Azure DevOps work items"
+version: "1.0.0"
+
+agents:
+  - name: "specification_planner"
+    type: "planning"
+    description: "Analyze specification and create work items"
+    max_iterations: 1
+    parameters:
+      spec_file: "examples/auth_specification.md"
+      project_name: "Example-Project"
+      organization: "https://dev.azure.com/your-org"
+      parent_id: null
+      area_path: "Development"
+      iteration_path: "Sprint 1"
+
+execution:
+  type: "sequential"
+  agents: ["specification_planner"]
+
+outputs:
+  - name: "created_work_items"
+    source: "specification_planner"
+    type: "json"
