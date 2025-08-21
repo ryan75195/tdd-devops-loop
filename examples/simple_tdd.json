@@ -1,18 +1,28 @@
 {
-  "name": "simple_tdd_workflow",
-  "mode": "sequential",
-  "global_config": {
-    "max_iterations": 20
-  },
-  "steps": [
+  "name": "Simple TDD Workflow",
+  "description": "Simple TDD implementation example",
+  "version": "2.0.0",
+  "agents": [
     {
-      "agent_type": "tdd",
       "name": "tdd_only",
-      "config": {
+      "type": "tdd",
+      "description": "TDD implementation for single work item",
+      "max_iterations": 20,
+      "parameters": {
         "project_path": ".",
-        "ticket_number": "BUG-456"
-      },
-      "max_iterations": 20
+        "work_item_id": "54321"
+      }
+    }
+  ],
+  "execution": {
+    "type": "sequential",
+    "agents": ["tdd_only"]
+  },
+  "outputs": [
+    {
+      "name": "tdd_implementation",
+      "source": "tdd_only",
+      "type": "json"
     }
   ]
 }

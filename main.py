@@ -96,11 +96,11 @@ def cmd_run_agent(args):
     
     # Add agent-specific parameters
     if args.agent_type == "tdd":
-        if not args.project_path or not args.ticket:
-            print("Error: TDD agent requires --project-path and --ticket")
+        if not args.project_path or not getattr(args, 'work_item', None):
+            print("Error: TDD agent requires --project-path and --work-item")
             sys.exit(1)
         config.set_parameter("project_path", args.project_path)
-        config.set_parameter("ticket_number", args.ticket)
+        config.set_parameter("work_item_id", getattr(args, 'work_item', None))
     
     elif args.agent_type == "debug":
         if not args.error_description:
@@ -239,22 +239,29 @@ def cmd_tdd_convenience(args):
     registry = get_registry()
     logger = Logger()
     
-    # Create TDD agent configuration
+    # Create TDD agent configuration with new parameters
+    config_params = {
+        "project_path": args.project_path,
+        "work_item_id": args.work_item_id
+    }
+    
+    # Add organization if provided
+    if hasattr(args, 'organization') and args.organization:
+        config_params["organization"] = args.organization
+    
     config = AgentConfig.create_simple(
         name="tdd_agent",
         agent_type="tdd",
-        max_iterations=args.max_iterations,
-        project_path=args.project_path,
-        ticket_number=args.ticket_number
+        **config_params
     )
     
     try:
         agent = registry.create_agent("tdd", config)
         pipeline = AgentPipeline(agent, logger)
         
-        print(f"Starting TDD workflow for ticket {args.ticket_number}...")
+        print(f"Starting TDD workflow for work item {args.work_item_id}...")
         print(f"Project: {args.project_path}")
-        print(f"Max iterations: {args.max_iterations}")
+        print("No iteration limits - will continue until all tasks complete")
         print()
         
         results = pipeline.run()
@@ -294,7 +301,7 @@ def main():
     run_parser.add_argument('agent_type', help='Type of agent to run')
     run_parser.add_argument('--max-iterations', type=int, default=50, help='Maximum iterations')
     run_parser.add_argument('--project-path', help='Project path (for TDD agent)')
-    run_parser.add_argument('--ticket', help='Ticket number (for TDD agent)')
+    run_parser.add_argument('--work-item', help='Work item ID (for TDD agent)')
     run_parser.add_argument('--error-description', help='Error description (for Debug agent)')
     run_parser.add_argument('--test-command', help='Test command (for Debug agent)')
     run_parser.add_argument('--target-files', help='Target files (for Code Review agent)')
@@ -311,7 +318,7 @@ def main():
     workflow_parser = subparsers.add_parser('workflow', help='Run a predefined workflow')
     workflow_parser.add_argument('workflow_type', choices=['tdd', 'debug'], help='Type of workflow')
     workflow_parser.add_argument('--project-path', help='Project path')
-    workflow_parser.add_argument('--ticket', help='Ticket number')
+    workflow_parser.add_argument('--work-item', help='Work item ID')
     workflow_parser.add_argument('--error-description', help='Error description')
     workflow_parser.add_argument('--test-command', help='Test command')
     
@@ -322,8 +329,8 @@ def main():
     # TDD convenience command (maintains familiar interface)
     tdd_parser = subparsers.add_parser('tdd', help='Run TDD workflow (convenience command)')
     tdd_parser.add_argument('project_path', help='Path to the project directory')
-    tdd_parser.add_argument('ticket_number', help='Ticket or issue identifier')
-    tdd_parser.add_argument('--max-iterations', type=int, default=50, help='Maximum iterations')
+    tdd_parser.add_argument('work_item_id', help='Azure DevOps PBI work item ID')
+    tdd_parser.add_argument('--organization', help='Azure DevOps organization URL')
     
     # Parse arguments
     args = parser.parse_args()

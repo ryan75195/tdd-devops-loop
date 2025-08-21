@@ -1,24 +1,36 @@
-name: "comprehensive_tdd_workflow"
-mode: "sequential"
+name: "TDD Workflow Example"
+description: "Run TDD implementation for Azure DevOps work items"
+version: "2.0.0"
 
-global_config:
-  max_iterations: 30
-  enable_logging: true
-
-steps:
-  - agent_type: "tdd"
-    name: "tdd_implementation" 
-    config:
-      project_path: "."  # Current directory (change to your project path)
-      ticket_number: "FEAT-001"  # Replace with your ticket number
+agents:
+  - name: "tdd_implementer"
+    type: "tdd"
+    description: "Implement Azure DevOps PBI using TDD methodology"
     max_iterations: 25
-
-  - agent_type: "code_review"
-    name: "post_tdd_review"
-    config:
+    parameters:
+      project_path: "."  # Current directory (change to your project path)
+      work_item_id: "12345"  # Replace with your Azure DevOps PBI ID
+      organization: "https://dev.azure.com/your-org"  # Optional if configured globally
+  
+  - name: "post_tdd_review"
+    type: "code_review"
+    description: "Review TDD implementation for quality"
+    max_iterations: 10
+    parameters:
       fix_issues: true
-      review_criteria: 
+      review_criteria:
         - "code quality"
         - "test coverage" 
         - "best practices"
-    max_iterations: 10
+
+execution:
+  type: "sequential"
+  agents: ["tdd_implementer", "post_tdd_review"]
+
+outputs:
+  - name: "tdd_results"
+    source: "tdd_implementer"
+    type: "json"
+  - name: "review_results"
+    source: "post_tdd_review"
+    type: "json"
