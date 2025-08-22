@@ -1,0 +1,29 @@
+{
+  "_comment": "Example settings file - copy to settings.json and fill in your values",
+  "api_keys": {
+    "openai_api_key": "sk-your-openai-api-key-here",
+    "claude_code_api_key": "your-claude-code-api-key-here",
+    "azure_devops_pat": "your-azure-devops-personal-access-token-here"
+  },
+  "tdd_agent": {
+    "max_reflection_retries": 3,
+    "enable_reflection": true,
+    "git_diff_min_size": 50
+  },
+  "planning_agent": {
+    "max_iterations": 1,
+    "include_integration_tests": true,
+    "test_categories": ["service", "integration", "end-to-end"]
+  },
+  "azure_devops": {
+    "default_organization": "https://dev.azure.com/yourorg",
+    "default_project": "YourProject",
+    "default_area_path": "YourProject\\Area",
+    "default_iteration_path": "YourProject\\Sprint 1"
+  },
+  "logging": {
+    "level": "info",
+    "enable_file_logging": false,
+    "log_file_path": "./logs/agentic_pipeline.log"
+  }
+}

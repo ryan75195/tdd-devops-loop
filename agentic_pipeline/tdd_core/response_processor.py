@@ -16,5 +16,5 @@ class ResponseProcessor:
         """Process the follow-up response using the parsing chain."""
         result = self.parsing_chain.parse(stdout)
         if not result:
-            self.logger.warning(f"Failed to parse JSON from follow-up. Raw output: {stdout[:200]}...")
+            self.logger.warning(f"Failed to parse JSON from follow-up. Raw output: {stdout}")
         return result

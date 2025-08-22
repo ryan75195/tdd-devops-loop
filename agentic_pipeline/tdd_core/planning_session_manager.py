@@ -67,7 +67,7 @@ class PlanningSessionManager:
                 message_text = self._extract_message_text(message)
                 if message_text:
                     response_text += message_text
-                    self.logger.info(f"Analysis response: {message_text[:200]}...")
+                    self.logger.info(f"Analysis response: {message_text}")
             
             # Parse the JSON response
             return self._parse_work_breakdown_response(response_text)

@@ -3,5 +3,9 @@
 # Claude Code SDK for direct API integration
 claude-code-sdk>=0.0.19
 
+# OpenAI for reflection quality gate
+openai>=1.0.0
+pydantic>=2.0.0
+
 # Async support (included with claude-code-sdk)
 anyio>=4.0.0

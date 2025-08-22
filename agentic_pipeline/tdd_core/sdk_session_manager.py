@@ -53,10 +53,13 @@ class ClaudeSDKSessionManager:
             )
             
             # Stream the initial TDD work
+            self.logger.info("🚀 Starting Claude Code SDK session - tool usage will be embedded in responses")
+            message_count = 0
             async for message in query(
                 prompt=initial_prompt, 
                 options=options
             ):
+                message_count += 1
                 collected_messages.append(message)
                 
                 # Process each message for usage limits or other important info
@@ -69,8 +72,9 @@ class ClaudeSDKSessionManager:
                     if epoch:
                         usage_limit_reset_epoch = max(usage_limit_reset_epoch or 0, epoch)
             
-            # No status check - just return success
-            self.logger.info("✅ TDD iteration completed successfully")
+            # Log completion with message count
+            self.logger.info(f"✅ TDD iteration completed successfully ({message_count} messages received)")
+            self.logger.info("📝 Note: Tool usage details are embedded within Claude's responses above")
             return usage_limit_reset_epoch, 0  # Success return code
             
         except Exception as e:
@@ -154,7 +158,7 @@ class ClaudeSDKSessionManager:
                     
                     # Extract a meaningful message from the response
                     lines = response_text.strip().split('\n')
-                    user_message = lines[0][:200] if lines else "TDD iteration completed"
+                    user_message = lines[0] if lines else "TDD iteration completed"
                     
                     result = {
                         "user_message": user_message,
@@ -173,6 +177,10 @@ class ClaudeSDKSessionManager:
         try:
             message_type = type(message).__name__
             
+            # Debug: log message types (comment out for less verbose logging)
+            # attrs = [attr for attr in dir(message) if not attr.startswith('_')]
+            # self.logger.debug(f"🔍 SDK Message: {message_type} (attrs: {attrs[:5]})")
+            
             # Handle different message types based on SDK documentation
             if message_type == "ResultMessage":
                 # Final result from Claude
@@ -185,14 +193,29 @@ class ClaudeSDKSessionManager:
                 self.logger.info(f"💭 {message_type}({data})")
                 return ""
             elif message_type == "ToolUseMessage":
-                # Tool usage messages - show what tool is being used
+                # Tool usage messages - show what tool is being used with parameters
                 tool_name = getattr(message, 'tool_name', 'Unknown')
-                self.logger.info(f"🔧 Using tool: {tool_name}")
+                tool_input = getattr(message, 'tool_input', {})
+                
+                # Log tool usage with key parameters (truncate only very long values)
+                if tool_input:
+                    # Show key parameters for common tools
+                    param_preview = self._format_tool_params(tool_name, tool_input)
+                    self.logger.info(f"🔧 Using tool: {tool_name}({param_preview})")
+                else:
+                    self.logger.info(f"🔧 Using tool: {tool_name}")
                 return ""
             elif message_type == "ToolResultMessage":
-                # Tool result messages - show tool completion
+                # Tool result messages - show tool completion with result summary
                 tool_name = getattr(message, 'tool_name', 'Unknown')
-                self.logger.info(f"✅ Tool completed: {tool_name}")
+                tool_result = getattr(message, 'tool_result', None)
+                
+                # Show result summary for certain tools
+                result_summary = self._format_tool_result(tool_name, tool_result)
+                if result_summary:
+                    self.logger.info(f"✅ Tool completed: {tool_name} → {result_summary}")
+                else:
+                    self.logger.info(f"✅ Tool completed: {tool_name}")
                 return ""
             elif hasattr(message, 'content'):
                 # Message with content blocks (typical assistant response)
@@ -202,22 +225,28 @@ class ClaudeSDKSessionManager:
                         text_parts.append(block.text)
                 content = ''.join(text_parts)
                 if content.strip():
+                    # Detect tool usage patterns in Claude's responses
+                    self._detect_tool_usage_patterns(content)
                     self.logger.info(f"💭 {content}")
                 return content
             elif hasattr(message, 'text'):
                 # Direct text message
                 text = message.text
                 if text.strip():
+                    # Detect tool usage patterns in text messages too
+                    self._detect_tool_usage_patterns(text)
                     self.logger.info(f"💭 {text}")
                 return text
             elif isinstance(message, str):
                 # String message
                 if message.strip():
+                    # Detect tool usage patterns in string messages too
+                    self._detect_tool_usage_patterns(message)
                     self.logger.info(f"💭 {message}")
                 return message
             else:
                 # Unknown message type - log for debugging
-                self.logger.debug(f"Unknown message type {message_type}: {str(message)[:100]}")
+                self.logger.debug(f"Unknown message type {message_type}: {str(message)}")
                 return ""
         except Exception as e:
             # Fallback: try to stringify the entire message
@@ -251,7 +280,6 @@ Follow strict TDD methodology for this single iteration:
 3. **Run the test** to confirm it fails (Red phase)
 4. **Write minimal code** to make ONLY that test pass (Green phase) 
 5. **Refactor** if needed while keeping the test green (Refactor phase)
-6. **Commit your changes** using git with a descriptive commit message
 
 **CRITICAL RULES FOR REAL TESTING:**
 - Write only ONE failing test per iteration, not a full test suite
@@ -263,7 +291,7 @@ Follow strict TDD methodology for this single iteration:
 - If testing a component, render the real component and test its behavior
 - Implement only the minimal code needed to pass that specific test
 - If the task is complex, focus on one small piece at a time
-- ALWAYS commit your changes at the end with: `git add .` then `git commit -m "descriptive message"`
+- DO NOT commit changes - the reflection system will handle commits after quality review
 
 **TESTING EXAMPLES:**
 ❌ WRONG: `const mockService = {{ getCachedDocumentById: jest.fn() }}`
@@ -272,9 +300,145 @@ Follow strict TDD methodology for this single iteration:
 ❌ WRONG: Re-implementing logic in test to make it pass
 ✅ CORRECT: Testing the real implementation and letting failures guide development
 
-Start by exploring the codebase, then write your single failing test that tests REAL implementation, implement the code, and commit."""
+Start by exploring the codebase, then write your single failing test that tests REAL implementation, and implement the code. Do not commit - the reflection system will review and commit approved changes."""
         
         return prompt
+    
+    def _detect_tool_usage_patterns(self, text: str) -> None:
+        """Detect and log tool usage patterns in Claude's responses."""
+        import re
+        lower_text = text.lower()
+        
+        # Common tool usage patterns - using regex for more flexible matching
+        patterns = [
+            (r"let me read", "🔧 Tool Pattern: Reading file"),
+            (r"let me check", "🔧 Tool Pattern: Checking/inspecting"),
+            (r"let me examine", "🔧 Tool Pattern: Examining file"), 
+            (r"let me look at", "🔧 Tool Pattern: Looking at file"),
+            (r"let me run", "🔧 Tool Pattern: Running command"),
+            (r"let me execute", "🔧 Tool Pattern: Executing command"),
+            (r"let me create", "🔧 Tool Pattern: Creating file"),
+            (r"let me write", "🔧 Tool Pattern: Writing file"),
+            (r"let me edit", "🔧 Tool Pattern: Editing file"),
+            (r"let me search", "🔧 Tool Pattern: Searching"),
+            (r"let me grep", "🔧 Tool Pattern: Grepping"),
+            (r"let me find", "🔧 Tool Pattern: Finding"),
+            (r"now let me", "🔧 Tool Pattern: Next action"),
+            (r"i'll use", "🔧 Tool Pattern: Using tool"),
+            (r"i will use", "🔧 Tool Pattern: Using tool"),
+            (r"using the bash", "🔧 Tool Pattern: Bash command"),
+            (r"using the read", "🔧 Tool Pattern: Reading"),
+            (r"using the edit", "🔧 Tool Pattern: Editing"),
+            (r"using the write", "🔧 Tool Pattern: Writing"),
+            (r"test.*fail", "🧪 Test Pattern: Failure detected"),
+            (r"test.*pass", "🧪 Test Pattern: Success detected"),
+            (r"run.*test", "🧪 Test Pattern: Running tests"),
+            (r"npm run", "🔧 Tool Pattern: NPM command"),
+            (r"git add", "🔧 Tool Pattern: Git add"),
+            (r"git commit", "🔧 Tool Pattern: Git commit")
+        ]
+        
+        for pattern, log_message in patterns:
+            if re.search(pattern, lower_text):
+                self.logger.info(log_message)
+                break  # Only log the first match to avoid spam
+    
+    def _format_tool_params(self, tool_name: str, tool_input: dict) -> str:
+        """Format tool parameters for logging display."""
+        try:
+            # Show key parameters for common tools
+            if tool_name == "Bash":
+                command = tool_input.get('command', '')
+                if len(command) > 100:
+                    return f"command='{command[:100]}...'"
+                return f"command='{command}'"
+            elif tool_name == "Read":
+                file_path = tool_input.get('file_path', '')
+                offset = tool_input.get('offset')
+                limit = tool_input.get('limit')
+                if offset is not None and limit is not None:
+                    return f"file='{file_path}', lines={offset}-{offset+limit}"
+                return f"file='{file_path}'"
+            elif tool_name == "Write":
+                file_path = tool_input.get('file_path', '')
+                content_len = len(str(tool_input.get('content', '')))
+                return f"file='{file_path}', {content_len} chars"
+            elif tool_name == "Edit":
+                file_path = tool_input.get('file_path', '')
+                old_len = len(str(tool_input.get('old_string', '')))
+                new_len = len(str(tool_input.get('new_string', '')))
+                return f"file='{file_path}', {old_len}→{new_len} chars"
+            elif tool_name == "Grep":
+                pattern = tool_input.get('pattern', '')
+                path = tool_input.get('path', '.')
+                output_mode = tool_input.get('output_mode', 'files_with_matches')
+                return f"pattern='{pattern}', path='{path}', mode={output_mode}"
+            elif tool_name == "Glob":
+                pattern = tool_input.get('pattern', '')
+                path = tool_input.get('path', '.')
+                return f"pattern='{pattern}', path='{path}'"
+            elif tool_name == "LS":
+                path = tool_input.get('path', '.')
+                return f"path='{path}'"
+            else:
+                # For other tools, show first few key-value pairs
+                items = []
+                for key, value in list(tool_input.items())[:3]:
+                    if isinstance(value, str) and len(value) > 50:
+                        items.append(f"{key}='{value[:50]}...'")
+                    else:
+                        items.append(f"{key}={repr(value)}")
+                return ", ".join(items)
+        except Exception:
+            return "..."
+    
+    def _format_tool_result(self, tool_name: str, tool_result) -> str:
+        """Format tool results for logging display."""
+        try:
+            if not tool_result:
+                return ""
+            
+            if tool_name == "Bash":
+                # Show exit code and output summary
+                if hasattr(tool_result, 'returncode'):
+                    code = tool_result.returncode
+                    output_len = len(str(getattr(tool_result, 'stdout', '')))
+                    return f"exit_code={code}, {output_len} chars output"
+                elif isinstance(tool_result, dict):
+                    code = tool_result.get('returncode', 'unknown')
+                    output_len = len(str(tool_result.get('stdout', '')))
+                    return f"exit_code={code}, {output_len} chars output"
+            elif tool_name in ["Read", "Write", "Edit"]:
+                # Show success/failure for file operations
+                if isinstance(tool_result, str):
+                    return f"{len(tool_result)} chars"
+                return "success"
+            elif tool_name in ["Grep", "Glob"]:
+                # Show number of matches
+                if isinstance(tool_result, list):
+                    return f"{len(tool_result)} matches"
+                elif isinstance(tool_result, str):
+                    lines = tool_result.count('\n') + 1
+                    return f"{lines} lines"
+            elif tool_name == "LS":
+                # Show number of items listed
+                if isinstance(tool_result, list):
+                    return f"{len(tool_result)} items"
+                elif isinstance(tool_result, str):
+                    lines = tool_result.count('\n')
+                    return f"{lines} items"
+            
+            # Generic result summary
+            if isinstance(tool_result, str):
+                return f"{len(tool_result)} chars"
+            elif isinstance(tool_result, list):
+                return f"{len(tool_result)} items"
+            elif isinstance(tool_result, dict):
+                return f"{len(tool_result)} fields"
+            else:
+                return "success"
+        except Exception:
+            return "completed"
     
     def _clean_html(self, text: str) -> str:
         """Remove HTML tags and decode entities from text."""

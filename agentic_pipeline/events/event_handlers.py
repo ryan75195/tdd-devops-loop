@@ -37,8 +37,8 @@ class LoggingObserver:
             self.logger.assistant_message(data.get('text', ''))
         elif event_type == 'tool_result':
             result_content = data.get('content', '')
-            if isinstance(result_content, str) and len(result_content) > 80:
-                self.logger.success(f"{result_content[:80]}...")
+            if isinstance(result_content, str) and result_content.strip():
+                self.logger.success(f"{result_content}")
                 print("-" * 40)
             else:
                 self.logger.success("Completed")
@@ -88,8 +88,8 @@ class UserEventHandler(EventHandler):
         for item in content:
             if item.get('type') == 'tool_result':
                 result_content = item.get('content', '')
-                if isinstance(result_content, str) and len(result_content) > 80:
-                    context.logger.success(f"{result_content[:80]}...")
+                if isinstance(result_content, str) and result_content.strip():
+                    context.logger.success(f"{result_content}")
                     print("-" * 40)
                 else:
                     context.logger.success("Completed")

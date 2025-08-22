@@ -255,7 +255,7 @@ class DebugAgent(Agent):
             
             # Fallback to basic parsing
             return {
-                "analysis": response[:500] + "..." if len(response) > 500 else response,
+                "analysis": response,
                 "hypothesis": "Unable to parse structured response",
                 "solution": "",
                 "confidence": 0.3,

@@ -56,3 +56,10 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Configuration with API keys
+config/settings.json
+
+# Logs
+logs/
+*.log
