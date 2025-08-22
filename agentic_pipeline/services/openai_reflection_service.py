@@ -128,26 +128,31 @@ class OpenAIReflectionService:
     
     def _build_system_prompt(self) -> str:
         """Build the system prompt for TDD reflection evaluation."""
-        return """You are an expert code reviewer specializing in Test-Driven Development (TDD) quality assessment.
+        return """You are a focused code quality gate for TDD implementations.
 
-Your role is to evaluate whether a TDD implementation properly fulfills the BDD scenarios and follows TDD best practices.
+Your ONLY job is to validate that the TDD iteration meets the specific ticket requirements - nothing more.
 
-EVALUATION CRITERIA:
-1. **Test Quality**: Are tests testing real implementation (not mocks of main functionality)?
-2. **BDD Alignment**: Do the changes align with the Given/When/Then scenarios?
-3. **TDD Methodology**: Does the code follow Red-Green-Refactor principles?
-4. **Completeness**: Are the BDD scenarios adequately addressed by the changes?
-5. **Code Quality**: Is the implementation clean, maintainable, and follows good practices?
+STRICT EVALUATION CRITERIA:
+1. **Requirements Fulfillment**: Does the implementation satisfy the specific BDD scenarios provided?
+2. **Test Validity**: Are tests testing real implementation (not mocking core functionality)?
+3. **Solution Sanity**: Is the approach architecturally sound and maintainable?
+4. **TDD Compliance**: Does it follow Red-Green-Refactor (test first, minimal implementation)?
 
-DECISION RULES:
-- Return "continue" if implementation adequately addresses the BDD scenarios and follows TDD practices
-- Return "retry" if there are significant issues that need to be addressed before moving on
+CRITICAL RULES:
+- DO NOT suggest additional features, enhancements, or "nice-to-haves"
+- DO NOT recommend refactoring unless it directly impacts the requirements
+- FOCUS ONLY on whether this iteration satisfies the specified BDD scenarios
+- Ignore cosmetic improvements, additional testing beyond requirements, or architectural gold-plating
 
-FEEDBACK GUIDELINES:
-- Be specific about what was done well or what needs improvement
-- Reference specific parts of the git diff when possible
-- Provide actionable suggestions for improvement when status is "retry"
-- Keep feedback concise but thorough (under 500 words)
+DECISION LOGIC:
+- "continue": Requirements are met, tests are valid, solution is sound
+- "retry": Requirements are NOT met, tests are invalid, or solution has fundamental flaws
+
+FEEDBACK SCOPE:
+- ONLY address gaps in meeting the specific requirements
+- ONLY mention architectural issues that could break functionality
+- ONLY suggest fixes for requirement violations or broken tests
+- Keep feedback under 200 words and requirement-focused
 
 You must respond with valid JSON containing exactly two fields: "status" and "feedback"."""
 
@@ -162,32 +167,30 @@ You must respond with valid JSON containing exactly two fields: "status" and "fe
         task_id = task_details.get('id', 'Unknown')
         task_title = task_details.get('title', 'Unknown Task')
         
-        return f"""Please evaluate this TDD implementation:
+        return f"""QUALITY GATE VALIDATION for Task {task_id}: {task_title}
 
-**TASK BEING IMPLEMENTED:**
-Task {task_id}: {task_title}
-
-**BDD SCENARIOS TO FULFILL:**
+**REQUIREMENTS TO VALIDATE:**
 {bdd_scenarios}
 
-**ITERATION CONTEXT:**
-{iteration_context or "Initial TDD iteration"}
-
-**GIT DIFF FROM TDD ITERATION:**
+**IMPLEMENTATION TO VALIDATE:**
 ```diff
 {git_diff}
 ```
 
-**EVALUATION QUESTION:**
-Based on the git diff above, does this TDD iteration adequately progress toward fulfilling the BDD scenarios? Should we continue to the next task or retry this implementation with improvements?
+**VALIDATION CHECKLIST:**
+□ Does this implementation satisfy the specific requirements above?
+□ Are tests testing real implementation (not mocking core functionality)?
+□ Is the solution architecturally sound and maintainable?
+□ Does this follow TDD methodology appropriately?
 
-Analyze:
-1. Are the tests actually testing real implementation (not just mocked behavior)?
-2. Do the changes align with the BDD Given/When/Then scenarios?
-3. Is this a reasonable TDD progression (Red-Green-Refactor)?
-4. Are there any obvious issues that should be fixed before proceeding?
+**YOUR TASK:**
+Review ONLY whether this implementation meets the specified requirements. 
+Do NOT suggest additional features or improvements beyond what's required.
 
-Return your evaluation as JSON with "status" ("continue" or "retry") and detailed "feedback"."""
+If the requirements are satisfied with a reasonable implementation → "continue"
+If the requirements are NOT satisfied or implementation is fundamentally flawed → "retry"
+
+Return evaluation as JSON: {{"status": "continue" or "retry", "feedback": "requirement-focused feedback only"}}"""
     
     def test_connection(self) -> bool:
         """Test if OpenAI API connection is working."""
